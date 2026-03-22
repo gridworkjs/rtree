@@ -414,6 +414,7 @@ export function createRTree(accessor, options = {}) {
 
   return {
     [SPATIAL_INDEX]: true,
+    accessor,
     insert,
     remove,
     search,

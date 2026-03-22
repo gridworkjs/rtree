@@ -1,6 +1,6 @@
 {
   "name": "@gridworkjs/rtree",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "R-tree spatial index with bulk loading for rectangles and polygons",
   "type": "module",
   "main": "src/index.js",
