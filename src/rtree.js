@@ -133,6 +133,19 @@ function normalizeBounds(input) {
   return toBounds(input)
 }
 
+function validateAccessorBounds(b) {
+  if (b === null || typeof b !== 'object') {
+    throw new Error('accessor must return a bounds object')
+  }
+  if (!Number.isFinite(b.minX) || !Number.isFinite(b.minY) ||
+      !Number.isFinite(b.maxX) || !Number.isFinite(b.maxY)) {
+    throw new Error('accessor returned non-finite bounds')
+  }
+  if (b.minX > b.maxX || b.minY > b.maxY) {
+    throw new Error('accessor returned inverted bounds (minX > maxX or minY > maxY)')
+  }
+}
+
 function heapPush(heap, entry) {
   heap.push(entry)
   let i = heap.length - 1
@@ -187,6 +200,7 @@ export function createRTree(accessor, options = {}) {
 
   function insert(item) {
     const itemBounds = normalizeBounds(accessor(item))
+    validateAccessorBounds(itemBounds)
     const entry = { item, bounds: itemBounds }
 
     if (root === null) {
@@ -239,6 +253,7 @@ export function createRTree(accessor, options = {}) {
     if (root === null) return false
 
     const itemBounds = normalizeBounds(accessor(item))
+    validateAccessorBounds(itemBounds)
     const path = []
     const indexPath = []
 
@@ -403,10 +418,11 @@ export function createRTree(accessor, options = {}) {
       return
     }
 
-    const entries = items.map(item => ({
-      item,
-      bounds: normalizeBounds(accessor(item))
-    }))
+    const entries = items.map(item => {
+      const itemBounds = normalizeBounds(accessor(item))
+      validateAccessorBounds(itemBounds)
+      return { item, bounds: itemBounds }
+    })
 
     root = buildSTR(entries, maxEntries)
     size = items.length

@@ -439,3 +439,25 @@ describe('stress', () => {
     assert.equal(all.length, 8)
   })
 })
+
+describe('accessor validation', () => {
+  it('throws on NaN bounds from accessor on insert', () => {
+    const tree = createRTree(() => ({ minX: NaN, minY: 0, maxX: 1, maxY: 1 }))
+    assert.throws(() => tree.insert({}), { message: 'accessor returned non-finite bounds' })
+  })
+
+  it('throws on Infinity bounds from accessor on insert', () => {
+    const tree = createRTree(() => ({ minX: 0, minY: 0, maxX: Infinity, maxY: 1 }))
+    assert.throws(() => tree.insert({}), { message: 'accessor returned non-finite bounds' })
+  })
+
+  it('throws on inverted bounds from accessor on insert', () => {
+    const tree = createRTree(() => ({ minX: 10, minY: 0, maxX: 0, maxY: 1 }))
+    assert.throws(() => tree.insert({}), { message: 'accessor returned inverted bounds (minX > maxX or minY > maxY)' })
+  })
+
+  it('throws on NaN bounds from accessor on load', () => {
+    const tree = createRTree(() => ({ minX: 0, minY: NaN, maxX: 1, maxY: 1 }))
+    assert.throws(() => tree.load([{}]), { message: 'accessor returned non-finite bounds' })
+  })
+})
