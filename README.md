@@ -36,8 +36,8 @@ map.search(rect(150, 250, 550, 650))
 // => [City Hall, Central Park, Library]
 
 // user taps a spot - what's closest?
-map.nearest({ x: 220, y: 320 }, 1)
-// => [Library]
+map.nearest({ x: 230, y: 250 }, 1)
+// => [City Hall]
 
 // new construction - add it dynamically
 map.insert({ name: 'Cafe', geometry: rect(215, 350, 230, 365) })

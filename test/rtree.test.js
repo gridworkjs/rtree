@@ -440,6 +440,55 @@ describe('stress', () => {
   })
 })
 
+describe('remove to empty', () => {
+  it('removes the last item without crashing', () => {
+    const tree = createRTree(accessor)
+    const item = { id: 0, geo: point(5, 5) }
+    tree.insert(item)
+    assert.equal(tree.remove(item), true)
+    assert.equal(tree.size, 0)
+    assert.equal(tree.bounds, null)
+  })
+
+  it('removes all items sequentially', () => {
+    const tree = createRTree(accessor, { maxEntries: 4 })
+    const items = pts([[1, 1], [2, 2], [3, 3], [4, 4], [5, 5], [6, 6], [7, 7], [8, 8]])
+    for (const item of items) tree.insert(item)
+    for (const item of items) {
+      assert.equal(tree.remove(item), true)
+    }
+    assert.equal(tree.size, 0)
+    assert.equal(tree.bounds, null)
+  })
+
+  it('allows insert after removing all items', () => {
+    const tree = createRTree(accessor)
+    const item = { id: 0, geo: point(5, 5) }
+    tree.insert(item)
+    tree.remove(item)
+    tree.insert({ id: 1, geo: point(10, 10) })
+    assert.equal(tree.size, 1)
+  })
+
+  it('removes all items after bulk load', () => {
+    const tree = createRTree(accessor)
+    const items = pts([[1, 1], [2, 2], [3, 3]])
+    tree.load(items)
+    for (const item of items) {
+      assert.equal(tree.remove(item), true)
+    }
+    assert.equal(tree.size, 0)
+    assert.equal(tree.bounds, null)
+  })
+})
+
+describe('accessor property', () => {
+  it('exposes the accessor function', () => {
+    const tree = createRTree(accessor)
+    assert.equal(tree.accessor, accessor)
+  })
+})
+
 describe('accessor validation', () => {
   it('throws on NaN bounds from accessor on insert', () => {
     const tree = createRTree(() => ({ minX: NaN, minY: 0, maxX: 1, maxY: 1 }))

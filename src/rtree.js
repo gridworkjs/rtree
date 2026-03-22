@@ -17,6 +17,7 @@ function createInternalNode(children) {
 }
 
 function recalcBounds(node) {
+  if (node.children.length === 0) return
   let b = node.children[0].bounds
   for (let i = 1; i < node.children.length; i++) b = merge(b, node.children[i].bounds)
   node.bounds = b
@@ -43,23 +44,23 @@ function chooseSubtree(node, entryBounds) {
 function splitNode(node, maxEntries) {
   const minEntries = Math.ceil(maxEntries * 0.4)
   const items = node.children
-  const axis = pickSplitAxis(items, minEntries, node.leaf)
+  const axis = pickSplitAxis(items, minEntries)
   return splitAlongAxis(items, axis, minEntries, node.leaf, node.height)
 }
 
-function pickSplitAxis(items, minEntries, isLeaf) {
+function pickSplitAxis(items, minEntries) {
   let bestMarginSum = Infinity
   let bestAxis = 0
 
   for (let axis = 0; axis < 2; axis++) {
     const sorted = items.slice().sort(axis === 0
-      ? (a, b) => bOf(a, isLeaf).minX - bOf(b, isLeaf).minX || bOf(a, isLeaf).maxX - bOf(b, isLeaf).maxX
-      : (a, b) => bOf(a, isLeaf).minY - bOf(b, isLeaf).minY || bOf(a, isLeaf).maxY - bOf(b, isLeaf).maxY)
+      ? (a, b) => bOf(a).minX - bOf(b).minX || bOf(a).maxX - bOf(b).maxX
+      : (a, b) => bOf(a).minY - bOf(b).minY || bOf(a).maxY - bOf(b).maxY)
 
     let marginSum = 0
     for (let i = minEntries; i <= sorted.length - minEntries; i++) {
-      const left = combinedBounds(sorted, 0, i, isLeaf)
-      const right = combinedBounds(sorted, i, sorted.length, isLeaf)
+      const left = combinedBounds(sorted, 0, i)
+      const right = combinedBounds(sorted, i, sorted.length)
       marginSum += margin(left) + margin(right)
     }
 
@@ -74,16 +75,16 @@ function pickSplitAxis(items, minEntries, isLeaf) {
 
 function splitAlongAxis(items, axis, minEntries, isLeaf, height) {
   const sorted = items.slice().sort(axis === 0
-    ? (a, b) => bOf(a, isLeaf).minX - bOf(b, isLeaf).minX || bOf(a, isLeaf).maxX - bOf(b, isLeaf).maxX
-    : (a, b) => bOf(a, isLeaf).minY - bOf(b, isLeaf).minY || bOf(a, isLeaf).maxY - bOf(b, isLeaf).maxY)
+    ? (a, b) => bOf(a).minX - bOf(b).minX || bOf(a).maxX - bOf(b).maxX
+    : (a, b) => bOf(a).minY - bOf(b).minY || bOf(a).maxY - bOf(b).maxY)
 
   let bestOverlap = Infinity
   let bestArea = Infinity
   let bestIndex = minEntries
 
   for (let i = minEntries; i <= sorted.length - minEntries; i++) {
-    const leftBounds = combinedBounds(sorted, 0, i, isLeaf)
-    const rightBounds = combinedBounds(sorted, i, sorted.length, isLeaf)
+    const leftBounds = combinedBounds(sorted, 0, i)
+    const rightBounds = combinedBounds(sorted, i, sorted.length)
     const overlap = overlapArea(leftBounds, rightBounds)
     const totalArea = area(leftBounds) + area(rightBounds)
 
@@ -103,13 +104,13 @@ function splitAlongAxis(items, axis, minEntries, isLeaf, height) {
   return [createInternalNode(leftChildren), createInternalNode(rightChildren)]
 }
 
-function bOf(entry, isLeaf) {
-  return isLeaf ? entry.bounds : entry.bounds
+function bOf(entry) {
+  return entry.bounds
 }
 
-function combinedBounds(items, start, end, isLeaf) {
-  let b = bOf(items[start], isLeaf)
-  for (let i = start + 1; i < end; i++) b = merge(b, bOf(items[i], isLeaf))
+function combinedBounds(items, start, end) {
+  let b = bOf(items[start])
+  for (let i = start + 1; i < end; i++) b = merge(b, bOf(items[i]))
   return b
 }
 
