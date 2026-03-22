@@ -14,45 +14,36 @@ npm install @gridworkjs/rtree
 
 ## Usage
 
+A map application indexing building footprints and park boundaries. Bulk-load the dataset for optimal tree quality, then query by viewport:
+
 ```js
 import { createRTree } from '@gridworkjs/rtree'
-import { point, rect, bounds } from '@gridworkjs/core'
+import { rect, bounds } from '@gridworkjs/core'
 
-// create an index - accessor extracts geometry from your items
-const tree = createRTree(item => item.position)
+const map = createRTree(feature => bounds(feature.geometry))
 
-// insert items one at a time
-tree.insert({ id: 1, position: point(10, 20) })
-tree.insert({ id: 2, position: rect(30, 30, 50, 50) })
-
-// or bulk load for better tree quality
-tree.load([
-  { id: 1, position: point(10, 20) },
-  { id: 2, position: rect(30, 30, 50, 50) },
-  { id: 3, position: point(80, 90) }
+// load all features at once - STR bulk loading produces a much
+// tighter tree than inserting one by one
+map.load([
+  { name: 'City Hall', geometry: rect(200, 300, 260, 370) },
+  { name: 'Central Park', geometry: rect(100, 400, 500, 600) },
+  { name: 'Library', geometry: rect(210, 310, 240, 340) },
+  { name: 'Warehouse', geometry: rect(800, 100, 900, 200) }
 ])
 
-// search by bounding box
-tree.search({ minX: 0, minY: 0, maxX: 40, maxY: 40 })
-// => [{ id: 1, ... }, { id: 2, ... }]
+// user pans the map - what's visible in this viewport?
+map.search(rect(150, 250, 550, 650))
+// => [City Hall, Central Park, Library]
 
-// search with geometry objects
-tree.search(rect(0, 0, 40, 40))
+// user taps a spot - what's closest?
+map.nearest({ x: 220, y: 320 }, 1)
+// => [Library]
 
-// find nearest neighbors
-tree.nearest(point(0, 0), 2)
-// => [{ id: 1, ... }, { id: 2, ... }]
-
-// remove by identity
-tree.remove(item)
-
-// clear all items
-tree.clear()
-
-// properties
-tree.size    // number of items
-tree.bounds  // bounding box of all items, or null if empty
+// new construction - add it dynamically
+map.insert({ name: 'Cafe', geometry: rect(215, 350, 230, 365) })
 ```
+
+R-trees are the best general-purpose spatial index for rectangles and regions. Use `load()` when you have the full dataset upfront, then mix in `insert()` and `remove()` as things change.
 
 ## Bulk Loading
 
