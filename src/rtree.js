@@ -195,6 +195,9 @@ function heapPop(heap) {
  */
 export function createRTree(accessor, options = {}) {
   const maxEntries = options.maxEntries ?? 9
+  if (!Number.isInteger(maxEntries) || maxEntries < 2) {
+    throw new Error('maxEntries must be at least 2')
+  }
 
   let root = null
   let size = 0
@@ -340,6 +343,10 @@ export function createRTree(accessor, options = {}) {
   function search(query) {
     if (root === null) return []
     const queryBounds = normalizeBounds(query)
+    if (!Number.isFinite(queryBounds.minX) || !Number.isFinite(queryBounds.minY) ||
+        !Number.isFinite(queryBounds.maxX) || !Number.isFinite(queryBounds.maxY)) {
+      throw new Error('search requires bounds with finite values')
+    }
     const results = []
     searchNode(root, queryBounds, results)
     return results
@@ -365,7 +372,10 @@ export function createRTree(accessor, options = {}) {
     if (root === null || k <= 0) return []
     const { x: px, y: py } = typeof queryPoint === 'object' && 'x' in queryPoint
       ? queryPoint
-      : { x: queryPoint.minX, y: queryPoint.minY }
+      : { x: (queryPoint.minX + queryPoint.maxX) / 2, y: (queryPoint.minY + queryPoint.maxY) / 2 }
+    if (!Number.isFinite(px) || !Number.isFinite(py)) {
+      throw new Error('nearest requires a point with finite x and y')
+    }
 
     const heap = []
     heapPush(heap, { dist: distanceToPoint(root.bounds, px, py), node: root, isItem: false })

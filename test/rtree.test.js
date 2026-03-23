@@ -489,6 +489,38 @@ describe('accessor property', () => {
   })
 })
 
+describe('maxEntries validation', () => {
+  it('throws when maxEntries is 1', () => {
+    assert.throws(() => createRTree(accessor, { maxEntries: 1 }), { message: 'maxEntries must be at least 2' })
+  })
+
+  it('throws when maxEntries is 0', () => {
+    assert.throws(() => createRTree(accessor, { maxEntries: 0 }), { message: 'maxEntries must be at least 2' })
+  })
+})
+
+describe('query input validation', () => {
+  it('nearest throws with NaN point', () => {
+    const tree = createRTree(accessor)
+    tree.insert({ id: 0, geo: point(1, 1) })
+    assert.throws(() => tree.nearest({ x: NaN, y: 0 }), { message: 'nearest requires a point with finite x and y' })
+  })
+
+  it('nearest with rect uses center point', () => {
+    const tree = createRTree(accessor)
+    const items = pts([[10, 0], [0, 10], [10, 10]])
+    for (const item of items) tree.insert(item)
+    const results = tree.nearest({ minX: 8, minY: 8, maxX: 12, maxY: 12 }, 3)
+    assert.equal(results[0].id, 2)
+  })
+
+  it('search throws with NaN bounds', () => {
+    const tree = createRTree(accessor)
+    tree.insert({ id: 0, geo: point(1, 1) })
+    assert.throws(() => tree.search({ minX: NaN, minY: 0, maxX: 10, maxY: 10 }), { message: 'search requires bounds with finite values' })
+  })
+})
+
 describe('accessor validation', () => {
   it('throws on NaN bounds from accessor on insert', () => {
     const tree = createRTree(() => ({ minX: NaN, minY: 0, maxX: 1, maxY: 1 }))

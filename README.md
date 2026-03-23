@@ -4,7 +4,7 @@
 
 <h1 align="center">@gridworkjs/rtree</h1>
 
-<p align="center">R-tree spatial index with bulk loading for rectangles and polygons</p>
+<p align="center">R-tree spatial index with bulk loading for rectangles and regions</p>
 
 ## Install
 
